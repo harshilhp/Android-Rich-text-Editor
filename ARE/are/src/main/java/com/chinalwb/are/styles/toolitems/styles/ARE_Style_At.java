@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.chinalwb.are.AREditText;
+import com.chinalwb.are.AREActivityResultHost;
 import com.chinalwb.are.activities.Are_AtPickerActivity;
 import com.chinalwb.are.models.AtItem;
 import com.chinalwb.are.spans.AreAtSpan;
@@ -55,6 +56,15 @@ public class ARE_Style_At extends ARE_ABS_FreeStyle {
 			return;
 		}
 		Intent intent = new Intent(this.mContext, Are_AtPickerActivity.class);
+		if (this.mContext instanceof AREActivityResultHost) {
+			((AREActivityResultHost) this.mContext).launchAtPicker(intent, data -> {
+				AtItem atItem = (AtItem) data.getSerializableExtra(EXTRA_TAG);
+				if (atItem != null) {
+					insertAt(atItem);
+				}
+			});
+			return;
+		}
 		((Activity) this.mContext).startActivityForResult(intent, REQUEST_CODE);
 	}
 

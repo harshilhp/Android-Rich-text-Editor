@@ -18,6 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.chinalwb.are.AREActivityResultHost;
 import com.chinalwb.are.AREditText;
 import com.chinalwb.are.R;
 import com.chinalwb.are.Util;
@@ -580,6 +581,16 @@ public class ARE_Toolbar extends LinearLayout {
 	    Intent intent = new Intent();
 	    intent.setClass(mContext, Are_VideoPlayerActivity.class);
 	    intent.setData(uri);
+        if (mContext instanceof AREActivityResultHost) {
+            ((AREActivityResultHost) mContext).launchVideoPlayer(intent, data -> {
+                String videoUrl = data.getStringExtra(Are_VideoPlayerActivity.VIDEO_URL);
+                Uri resultUri = data.getData();
+                if (resultUri != null) {
+                    mVideoStyle.insertVideo(resultUri, videoUrl);
+                }
+            });
+            return;
+        }
 	    mContext.startActivityForResult(intent, REQ_VIDEO);
     }
 

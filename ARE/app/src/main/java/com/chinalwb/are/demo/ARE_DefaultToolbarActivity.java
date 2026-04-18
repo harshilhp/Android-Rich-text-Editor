@@ -3,7 +3,6 @@ package com.chinalwb.are.demo;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,7 +40,7 @@ import com.chinalwb.are.styles.toolitems.IARE_ToolItem;
 
 import static com.chinalwb.are.demo.TextViewActivity.HTML_TEXT;
 
-public class ARE_DefaultToolbarActivity extends AppCompatActivity {
+public class ARE_DefaultToolbarActivity extends AREDemoBaseActivity {
 
     private IARE_Toolbar mToolbar;
 
@@ -214,10 +213,4 @@ public class ARE_DefaultToolbarActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        mToolbar.onActivityResult(requestCode, resultCode, data);
-    }
 }

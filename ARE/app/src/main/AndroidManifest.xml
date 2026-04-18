@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.chinalwb.are.demo">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -15,9 +11,11 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".ARE_MultiInstanceActivity"
+            android:exported="false"
             android:windowSoftInputMode="adjustResize"></activity>
         <activity
             android:name=".IndexActivity"
+            android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,31 +25,40 @@
         </activity>
         <activity
             android:name=".AtActivity"
+            android:exported="false"
             android:label="@string/title_activity_at"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".TextViewActivity" />
+        <activity
+            android:name=".TextViewActivity"
+            android:exported="false" />
         <activity
             android:name=".ARE_FullBottomActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__full_bottom"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ARE_FullTopActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__full_top"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ARE_MinBottomActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__min_bottom"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ARE_MinTopActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__min_top"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ARE_MinHideActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__min_hide"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".ARE_DefaultToolbarActivity"
+            android:exported="false"
             android:label="@string/title_activity_are__default_toolbar"
             android:windowSoftInputMode="adjustResize" />
     </application>

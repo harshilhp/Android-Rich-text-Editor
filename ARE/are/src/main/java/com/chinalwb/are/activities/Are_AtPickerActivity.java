@@ -2,7 +2,6 @@ package com.chinalwb.are.activities;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.AsyncTask;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,8 +15,6 @@ import com.chinalwb.are.styles.ARE_At;
 
 import java.util.ArrayList;
 import java.util.Random;
-
-import static android.os.AsyncTask.THREAD_POOL_EXECUTOR;
 
 public class Are_AtPickerActivity extends AppCompatActivity {
 
@@ -59,7 +56,7 @@ public class Are_AtPickerActivity extends AppCompatActivity {
     }
 
     private void prepareData() {
-        new DataLoadTask().executeOnExecutor(THREAD_POOL_EXECUTOR, "");
+        showData(makeDummyData());
     }
 
     private void showData(ArrayList<AtItem> itemsList) {
@@ -111,19 +108,4 @@ public class Are_AtPickerActivity extends AppCompatActivity {
         }
         return itemsList;
     }
-
-    private class DataLoadTask extends AsyncTask<String, String, ArrayList<AtItem>> {
-        @Override
-        protected ArrayList<AtItem> doInBackground(String... strings) {
-            ArrayList<AtItem> dummyList = makeDummyData();
-            return dummyList;
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<AtItem> itemsList) {
-            super.onPostExecute(itemsList);
-            showData(itemsList);
-        }
-    }
-
 }

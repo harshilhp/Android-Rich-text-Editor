@@ -12,6 +12,7 @@ import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -28,6 +29,10 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * All Rights Reserved.
@@ -264,7 +269,10 @@ public class Util {
                         return Environment.getExternalStorageDirectory() + "/" + split[1];
                     }
 
-                    // TODO handle non-primary volumes
+                    String externalStoragePath = findExternalStorageDocumentPath(context, type, split[1]);
+                    if (externalStoragePath != null) {
+                        return externalStoragePath;
+                    }
                 }
                 // DownloadsProvider
                 else if (isDownloadsDocument(uri)) {
@@ -306,6 +314,44 @@ public class Util {
             // File
             else if ("file".equalsIgnoreCase(uri.getScheme())) {
                 return uri.getPath();
+            }
+
+            return null;
+        }
+
+        static String findExternalStorageDocumentPath(Context context, String type, String relativePath) {
+            File[] externalDirs = context.getExternalFilesDirs(null);
+            if (externalDirs == null) {
+                return null;
+            }
+
+            List<String> externalDirPaths = new ArrayList<>();
+            for (File externalDir : externalDirs) {
+                if (externalDir != null) {
+                    externalDirPaths.add(externalDir.getAbsolutePath());
+                }
+            }
+
+            return buildExternalStorageDocumentPath(type, relativePath, externalDirPaths.toArray(new String[0]));
+        }
+
+        static String buildExternalStorageDocumentPath(String type, String relativePath, String[] externalDirPaths) {
+            if (type == null || relativePath == null || externalDirPaths == null) {
+                return null;
+            }
+
+            for (String externalDirPath : externalDirPaths) {
+                if (externalDirPath == null) {
+                    continue;
+                }
+                int androidDataIndex = externalDirPath.indexOf("/Android/data/");
+                if (androidDataIndex == -1) {
+                    continue;
+                }
+                String volumeRoot = externalDirPath.substring(0, androidDataIndex);
+                if (volumeRoot.toLowerCase().contains(type.toLowerCase())) {
+                    return volumeRoot + "/" + relativePath;
+                }
             }
 
             return null;
@@ -397,5 +443,24 @@ public class Util {
         drawable.setBounds(0, 0, w, h);
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    public static Bitmap createVideoThumbnail(Context context, Uri uri) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(context, uri);
+            return retriever.getFrameAtTime();
+        } catch (RuntimeException e) {
+            String path = GetPathFromUri4kitkat.getPath(context, uri);
+            if (path == null) {
+                return null;
+            }
+            return android.media.ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+        } finally {
+            try {
+                retriever.release();
+            } catch (Exception ignored) {
+            }
+        }
     }
 }

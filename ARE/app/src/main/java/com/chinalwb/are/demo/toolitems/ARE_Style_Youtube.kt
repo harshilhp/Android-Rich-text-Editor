@@ -10,9 +10,11 @@ import android.text.TextUtils
 import android.widget.EditText
 import android.widget.ImageView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.Target
 import com.chinalwb.are.AREditText
 import com.chinalwb.are.demo.R
 import com.chinalwb.are.styles.ARE_ABS_FreeStyle
@@ -82,13 +84,13 @@ class ARE_Style_Youtube(editText: AREditText, imageView: ImageView) : ARE_ABS_Fr
         Glide.with(mImageView.context).asBitmap().load(com.chinalwb.are.demo.R.drawable.youtube)
                 .apply(RequestOptions().override(50, 50))
                 .listener(object : RequestListener<Bitmap> {
-                    override fun onLoadFailed(e: GlideException?, model: Any?, target: com.bumptech.glide.request.target.Target<Bitmap>?, isFirstResource: Boolean): Boolean {
+                    override fun onLoadFailed(e: GlideException?, model: Any?, target: Target<Bitmap>, isFirstResource: Boolean): Boolean {
                         return true
                     }
 
-                    override fun onResourceReady(bitmap: Bitmap?, model: Any?, target: com.bumptech.glide.request.target.Target<Bitmap>?, dataSource: com.bumptech.glide.load.DataSource?, isFirstResource: Boolean): Boolean {
+                    override fun onResourceReady(bitmap: Bitmap, model: Any, target: Target<Bitmap>, dataSource: DataSource, isFirstResource: Boolean): Boolean {
                         val youtubeColor = Color.RED
-                        editable.setSpan(ARE_Span_Youtube(bitmap!!, title, url, youtubeColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        editable.setSpan(ARE_Span_Youtube(bitmap, title, url, youtubeColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                         return true
                     }
                 })

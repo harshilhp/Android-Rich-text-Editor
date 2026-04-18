@@ -3,8 +3,6 @@ package com.chinalwb.are.demo;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,7 +12,7 @@ import com.chinalwb.are.strategies.VideoStrategy;
 
 import static com.chinalwb.are.demo.TextViewActivity.HTML_TEXT;
 
-public class ARE_FullBottomActivity extends AppCompatActivity {
+public class ARE_FullBottomActivity extends AREDemoBaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,12 +53,6 @@ public class ARE_FullBottomActivity extends AppCompatActivity {
         this.arEditor.setVideoStrategy(mVideoStrategy);
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        this.arEditor.onActivityResult(requestCode, resultCode, data);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

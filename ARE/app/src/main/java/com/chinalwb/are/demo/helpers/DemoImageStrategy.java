@@ -1,75 +1,60 @@
 package com.chinalwb.are.demo.helpers;
 
-import android.app.ProgressDialog;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 import com.chinalwb.are.spans.AreImageSpan;
 import com.chinalwb.are.strategies.ImageStrategy;
 import com.chinalwb.are.styles.toolitems.styles.ARE_Style_Image;
 
 import java.lang.ref.WeakReference;
-
-import static android.os.AsyncTask.THREAD_POOL_EXECUTOR;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DemoImageStrategy implements ImageStrategy {
+    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+
     @Override
     public void uploadAndInsertImage(Uri uri, ARE_Style_Image areStyleImage) {
-        new UploadImageTask(areStyleImage).executeOnExecutor(THREAD_POOL_EXECUTOR, uri);
+        UploadImageTask task = new UploadImageTask(areStyleImage);
+        task.upload(uri);
     }
 
-    private static class UploadImageTask extends AsyncTask<Uri, Integer, String> {
+    private static class UploadImageTask {
 
-        WeakReference<ARE_Style_Image> areStyleImage;
-        private ProgressDialog dialog;
+        private final WeakReference<ARE_Style_Image> areStyleImage;
+
         UploadImageTask(ARE_Style_Image styleImage) {
             this.areStyleImage = new WeakReference<>(styleImage);
         }
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            if (dialog == null) {
-                dialog = ProgressDialog.show(
-                        areStyleImage.get().getEditText().getContext(),
-                        "",
-                        "Uploading image. Please wait...",
-                        true);
-            } else {
-                dialog.show();
+        void upload(Uri uri) {
+            ARE_Style_Image styleImage = areStyleImage.get();
+            if (styleImage == null) {
+                return;
             }
-        }
 
-        @Override
-        protected String doInBackground(Uri... uris) {
-            if (uris != null && uris.length > 0) {
-                try {
-                    // do upload here ~
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            EXECUTOR.execute(() -> {
+                String imageUrl = null;
+                if (uri != null) {
+                    try {
+                        // do upload here ~
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+
+                    imageUrl = "https://avatars0.githubusercontent.com/u/1758864?s=460&v=4";
                 }
 
-                // Returns the image url on server here
-                return "https://avatars0.githubusercontent.com/u/1758864?s=460&v=4";
-            }
-            return null;
-        }
+                ARE_Style_Image currentStyleImage = areStyleImage.get();
+                if (currentStyleImage == null || imageUrl == null) {
+                    return;
+                }
 
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            if (dialog != null) {
-                dialog.dismiss();
-            }
-            if (areStyleImage.get() != null) {
-                areStyleImage.get().insertImage(s, AreImageSpan.ImageType.URL);
-            }
+                String finalImageUrl = imageUrl;
+                currentStyleImage.getEditText().post(() ->
+                        currentStyleImage.insertImage(finalImageUrl, AreImageSpan.ImageType.URL));
+            });
         }
     }
 }
