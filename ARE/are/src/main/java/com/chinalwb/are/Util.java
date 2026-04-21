@@ -215,8 +215,8 @@ public class Util {
         if (w < maxWidth * 0.2) {
             return bitmap;
         }
-        matrix.postScale(100, 100);
-        return Bitmap.createBitmap(bitmap, 0, 0, 100, 100, matrix, true);
+        matrix.postScale(scaleWidth, scaleHeight);
+        return Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
     }
 
     public static Bitmap mergeBitmaps(Bitmap background, Bitmap foreground) {
