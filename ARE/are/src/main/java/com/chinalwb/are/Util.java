@@ -216,7 +216,7 @@ public class Util {
             return bitmap;
         }
         matrix.postScale(scaleWidth, scaleHeight);
-        return Bitmap.createBitmap(bitmap, 0, 0, w, h, matrix, true);
+        return Bitmap.createBitmap(bitmap, 0, 0, 100, 100, matrix, true);
     }
 
     public static Bitmap mergeBitmaps(Bitmap background, Bitmap foreground) {
