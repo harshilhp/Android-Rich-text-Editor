@@ -215,7 +215,7 @@ public class Util {
         if (w < maxWidth * 0.2) {
             return bitmap;
         }
-        matrix.postScale(scaleWidth, scaleHeight);
+        matrix.postScale(100, 100);
         return Bitmap.createBitmap(bitmap, 0, 0, 100, 100, matrix, true);
     }
 
