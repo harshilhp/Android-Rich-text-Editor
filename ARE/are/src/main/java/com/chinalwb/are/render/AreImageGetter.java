@@ -14,7 +14,6 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.chinalwb.are.AREditText;
 import com.chinalwb.are.Constants;
-import com.chinalwb.are.Util;
 import com.chinalwb.are.android.inner.Html;
 
 public class AreImageGetter implements Html.ImageGetter {
@@ -71,9 +70,17 @@ public class AreImageGetter implements Html.ImageGetter {
 
         @Override
         public void onResourceReady(Bitmap bitmap, Transition<? super Bitmap> transition) {
-            bitmap = Util.scaleBitmapToFitWidth(bitmap, Constants.SCREEN_WIDTH);
-            int bw = bitmap.getWidth();
-            int bh = bitmap.getHeight();
+            int intrinsicWidth = bitmap.getWidth();
+            int intrinsicHeight = bitmap.getHeight();
+            int requestedWidth = areUrlDrawable.getRequestedWidthPx();
+            int requestedHeight = areUrlDrawable.getRequestedHeightPx();
+
+            int[] size = resolveTargetSize(intrinsicWidth, intrinsicHeight, requestedWidth, requestedHeight, getTextMaxWidth());
+            int bw = size[0];
+            int bh = size[1];
+            if (bw > 0 && bh > 0 && (bw != intrinsicWidth || bh != intrinsicHeight)) {
+                bitmap = Bitmap.createScaledBitmap(bitmap, bw, bh, true);
+            }
             Rect rect = new Rect(0, 0, bw, bh);
             BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
             bitmapDrawable.setBounds(rect);
@@ -83,6 +90,45 @@ public class AreImageGetter implements Html.ImageGetter {
             textView.setText(textView.getText());
             textView.invalidate();
             AREditText.startMonitor();
+        }
+
+        private int getTextMaxWidth() {
+            int width = textView.getWidth();
+            if (width <= 0) {
+                width = textView.getMeasuredWidth();
+            }
+            if (width <= 0) {
+                width = Constants.SCREEN_WIDTH;
+            }
+            int maxWidth = width - textView.getPaddingLeft() - textView.getPaddingRight();
+            return Math.max(maxWidth, 1);
+        }
+
+        private int[] resolveTargetSize(int intrinsicWidth, int intrinsicHeight, int requestedWidth, int requestedHeight, int maxWidth) {
+            float safeIntrinsicWidth = Math.max(intrinsicWidth, 1);
+            float safeIntrinsicHeight = Math.max(intrinsicHeight, 1);
+            float scale;
+            if (requestedWidth > 0 && requestedHeight > 0) {
+                float widthScale = requestedWidth / safeIntrinsicWidth;
+                float heightScale = requestedHeight / safeIntrinsicHeight;
+                scale = Math.min(widthScale, heightScale);
+            } else if (requestedWidth > 0) {
+                scale = requestedWidth / safeIntrinsicWidth;
+            } else if (requestedHeight > 0) {
+                scale = requestedHeight / safeIntrinsicHeight;
+            } else {
+                scale = 1f;
+            }
+            scale = Math.max(scale, 1f / safeIntrinsicWidth);
+            int width = Math.max(1, Math.round(safeIntrinsicWidth * scale));
+            int height = Math.max(1, Math.round(safeIntrinsicHeight * scale));
+
+            if (maxWidth > 0 && width > maxWidth) {
+                float fitScale = maxWidth / (float) width;
+                width = Math.max(1, Math.round(width * fitScale));
+                height = Math.max(1, Math.round(height * fitScale));
+            }
+            return new int[]{width, height};
         }
     }
 }

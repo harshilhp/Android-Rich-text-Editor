@@ -88,6 +88,7 @@ import com.chinalwb.are.spans.AreVideoSpan;
 import com.chinalwb.are.spans.EmojiSpan;
 import com.chinalwb.are.spans.ListBulletSpan;
 import com.chinalwb.are.spans.ListNumberSpan;
+import com.chinalwb.are.render.AreUrlDrawable;
 
 import static com.chinalwb.are.android.inner.Html.sContext;
 
@@ -1307,20 +1308,29 @@ class HtmlToSpannedConverter implements ContentHandler {
 
     private static void startImg(Editable text, Attributes attributes, Html.ImageGetter img) {
         String src = attributes.getValue("", "src");
+        int requestedWidth = parseHtmlDimension(attributes.getValue("", "width"));
+        int requestedHeight = parseHtmlDimension(attributes.getValue("", "height"));
         Drawable d = null;
         ImageSpan imageSpan = null;
         if (img != null) {
             d = img.getDrawable(src);
+            if (d instanceof AreUrlDrawable) {
+                ((AreUrlDrawable) d).setRequestedSize(requestedWidth, requestedHeight);
+            }
             if (src.startsWith(Constants.EMOJI)) {
                 String resIdStr = src.substring(6);
                 int resId = Integer.parseInt(resIdStr);
                 imageSpan = new AreImageSpan(sContext, resId);
             } else if (src.startsWith("http")) {
-                imageSpan = new AreImageSpan(sContext, d, src);
+                imageSpan = new AreImageSpan(sContext, d, src, requestedWidth, requestedHeight);
             } else {
                 // content://com.android.providers.media.documents/document/image%3A33
                 // Such uri cannot be loaded from AreImageGetter.
-                imageSpan = new AreImageSpan(sContext, Uri.parse(src));
+                if (d != null) {
+                    imageSpan = new AreImageSpan(sContext, d, src, requestedWidth, requestedHeight);
+                } else {
+                    imageSpan = new AreImageSpan(sContext, Uri.parse(src), requestedWidth, requestedHeight);
+                }
             }
         }
 
@@ -1339,6 +1349,37 @@ class HtmlToSpannedConverter implements ContentHandler {
 
         text.setSpan(imageSpan, len, text.length(),
                      Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private static int parseHtmlDimension(String value) {
+        if (TextUtils.isEmpty(value)) {
+            return -1;
+        }
+        String trimmed = value.trim();
+        if (trimmed.endsWith("%")) {
+            return -1;
+        }
+        StringBuilder numeric = new StringBuilder();
+        boolean hasDigit = false;
+        for (int i = 0; i < trimmed.length(); i++) {
+            char ch = trimmed.charAt(i);
+            if ((ch >= '0' && ch <= '9') || (ch == '.' && hasDigit)) {
+                numeric.append(ch);
+                if (ch >= '0' && ch <= '9') {
+                    hasDigit = true;
+                }
+            } else if (hasDigit) {
+                break;
+            }
+        }
+        if (!hasDigit) {
+            return -1;
+        }
+        try {
+            return Math.max(1, Math.round(Float.parseFloat(numeric.toString())));
+        } catch (NumberFormatException ignore) {
+            return -1;
+        }
     }
 
     private static void startVideo(Editable text, Attributes attributes, Html.ImageGetter img) {

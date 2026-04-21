@@ -9,8 +9,7 @@ import android.text.style.ImageSpan;
 import com.chinalwb.are.Constants;
 
 public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
-
-	private static final int FIXED_IMAGE_SIZE_PX = 100;
+	private static final int UNSET_SIZE = -1;
 
 	public enum ImageType {
 		URI,
@@ -26,10 +25,22 @@ public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 
 	private int mResId;
 
+	private int mRequestedWidthPx = UNSET_SIZE;
+
+	private int mRequestedHeightPx = UNSET_SIZE;
+
 	public AreImageSpan(Context context, Bitmap bitmapDrawable, Uri uri) {
 		super(context, bitmapDrawable);
 		this.mContext = context;
 		this.mUri = uri;
+	}
+
+	public AreImageSpan(Context context, Bitmap bitmapDrawable, Uri uri, int requestedWidthPx, int requestedHeightPx) {
+		super(context, bitmapDrawable);
+		this.mContext = context;
+		this.mUri = uri;
+		this.mRequestedWidthPx = requestedWidthPx;
+		this.mRequestedHeightPx = requestedHeightPx;
 	}
 
 	public AreImageSpan(Context context, Bitmap bitmapDrawable, String url) {
@@ -38,10 +49,26 @@ public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 		this.mUrl = url;
 	}
 
+	public AreImageSpan(Context context, Bitmap bitmapDrawable, String url, int requestedWidthPx, int requestedHeightPx) {
+		super(context, bitmapDrawable);
+		this.mContext = context;
+		this.mUrl = url;
+		this.mRequestedWidthPx = requestedWidthPx;
+		this.mRequestedHeightPx = requestedHeightPx;
+	}
+
 	public AreImageSpan(Context context, Drawable drawable, String url) {
 		super(drawable, url);
 		this.mContext = context;
 		this.mUrl = url;
+	}
+
+	public AreImageSpan(Context context, Drawable drawable, String url, int requestedWidthPx, int requestedHeightPx) {
+		super(drawable, url);
+		this.mContext = context;
+		this.mUrl = url;
+		this.mRequestedWidthPx = requestedWidthPx;
+		this.mRequestedHeightPx = requestedHeightPx;
 	}
 
 //	public AreImageSpan(Context context, Bitmap bitmapDrawable, int resId) {
@@ -59,6 +86,14 @@ public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 		super(context, uri);
 		this.mContext = context;
 		this.mUri = uri;
+	}
+
+    public AreImageSpan(Context context, Uri uri, int requestedWidthPx, int requestedHeightPx) {
+		super(context, uri);
+		this.mContext = context;
+		this.mUri = uri;
+		this.mRequestedWidthPx = requestedWidthPx;
+		this.mRequestedHeightPx = requestedHeightPx;
 	}
 
 //
@@ -207,11 +242,53 @@ public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 		if (drawable == null) {
 			return null;
 		}
-		// Keep emoji resource spans at intrinsic size and clamp html image spans.
-		if (getImageType() != ImageType.RES) {
-			drawable.setBounds(0, 0, FIXED_IMAGE_SIZE_PX, FIXED_IMAGE_SIZE_PX);
+		if (getImageType() == ImageType.RES) {
+			return drawable;
 		}
+
+		int intrinsicWidth = drawable.getIntrinsicWidth();
+		int intrinsicHeight = drawable.getIntrinsicHeight();
+		if (intrinsicWidth <= 0) {
+			intrinsicWidth = drawable.getBounds().width();
+		}
+		if (intrinsicHeight <= 0) {
+			intrinsicHeight = drawable.getBounds().height();
+		}
+		intrinsicWidth = Math.max(intrinsicWidth, 1);
+		intrinsicHeight = Math.max(intrinsicHeight, 1);
+
+		int[] size = resolveTargetSize(intrinsicWidth, intrinsicHeight, mRequestedWidthPx, mRequestedHeightPx, Constants.SCREEN_WIDTH);
+		drawable.setBounds(0, 0, size[0], size[1]);
 		return drawable;
+	}
+
+	private int[] resolveTargetSize(int intrinsicWidth, int intrinsicHeight, int requestedWidth, int requestedHeight, int maxWidth) {
+		float safeIntrinsicWidth = Math.max(intrinsicWidth, 1);
+		float safeIntrinsicHeight = Math.max(intrinsicHeight, 1);
+		float scale;
+		if (requestedWidth > 0 && requestedHeight > 0) {
+			float widthScale = requestedWidth / safeIntrinsicWidth;
+			float heightScale = requestedHeight / safeIntrinsicHeight;
+			scale = Math.min(widthScale, heightScale);
+		} else if (requestedWidth > 0) {
+			scale = requestedWidth / safeIntrinsicWidth;
+		} else if (requestedHeight > 0) {
+			scale = requestedHeight / safeIntrinsicHeight;
+		} else {
+			scale = 1f;
+		}
+
+		scale = Math.max(scale, 1f / safeIntrinsicWidth);
+		int width = Math.max(1, Math.round(safeIntrinsicWidth * scale));
+		int height = Math.max(1, Math.round(safeIntrinsicHeight * scale));
+
+		if (maxWidth > 0 && width > maxWidth) {
+			float fitScale = maxWidth / (float) width;
+			width = Math.max(1, Math.round(width * fitScale));
+			height = Math.max(1, Math.round(height * fitScale));
+		}
+
+		return new int[] { width, height };
 	}
 
 }

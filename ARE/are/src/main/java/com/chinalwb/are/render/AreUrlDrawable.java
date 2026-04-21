@@ -18,11 +18,15 @@ import java.security.MessageDigest;
  *
  */
 public class AreUrlDrawable extends BitmapDrawable {
+    private static final int UNSET_SIZE = -1;
+
     protected Drawable defaultDrawable;
 
     private Drawable mDrawable;
     protected int w;
     protected int h;
+    private int requestedWidthPx = UNSET_SIZE;
+    private int requestedHeightPx = UNSET_SIZE;
 
     private Context mContext;
 
@@ -74,5 +78,18 @@ public class AreUrlDrawable extends BitmapDrawable {
 
     public void setDrawable(Drawable drawable) {
         mDrawable = drawable;
+    }
+
+    public void setRequestedSize(int widthPx, int heightPx) {
+        requestedWidthPx = widthPx;
+        requestedHeightPx = heightPx;
+    }
+
+    public int getRequestedWidthPx() {
+        return requestedWidthPx;
+    }
+
+    public int getRequestedHeightPx() {
+        return requestedHeightPx;
     }
 }
