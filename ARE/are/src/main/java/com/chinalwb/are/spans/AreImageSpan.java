@@ -10,6 +10,8 @@ import com.chinalwb.are.Constants;
 
 public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 
+	private static final int FIXED_IMAGE_SIZE_PX = 100;
+
 	public enum ImageType {
 		URI,
 		URL,
@@ -197,6 +199,19 @@ public class AreImageSpan extends ImageSpan implements ARE_Clickable_Span {
 
 	public int getResId() {
 		return this.mResId;
+	}
+
+	@Override
+	public Drawable getDrawable() {
+		Drawable drawable = super.getDrawable();
+		if (drawable == null) {
+			return null;
+		}
+		// Keep emoji resource spans at intrinsic size and clamp html image spans.
+		if (getImageType() != ImageType.RES) {
+			drawable.setBounds(0, 0, FIXED_IMAGE_SIZE_PX, FIXED_IMAGE_SIZE_PX);
+		}
+		return drawable;
 	}
 
 }
