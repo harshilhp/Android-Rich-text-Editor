@@ -79,6 +79,7 @@ import com.chinalwb.are.models.AtItem;
 import com.chinalwb.are.spans.ARE_Span;
 import com.chinalwb.are.spans.AreAtSpan;
 import com.chinalwb.are.spans.AreFontSizeSpan;
+import com.chinalwb.are.spans.AreHeadingSpan;
 import com.chinalwb.are.spans.AreHrSpan;
 import com.chinalwb.are.spans.AreImageSpan;
 import com.chinalwb.are.spans.AreListSpan;
@@ -525,13 +526,14 @@ public class Html {
                     out.append("</" + listType + ">\n");
                 }
 
-                String tagType = isListItem ? "li" : "p";
+                String tagType = isListItem ? "li" : getParagraphTagType(text, i, next);
                 out.append("<").append(tagType)
                         .append(getTextDirection(text, i, next))
                         .append(getTextStyles(text, i, next, !isListItem, !isListItem))
                         .append(">");
 
-                withinParagraph(out, text, i, next);
+                boolean useSemanticHeadingTag = !isListItem && tagType.startsWith("h");
+                withinParagraph(out, text, i, next, useSemanticHeadingTag);
 
                 out.append("</");
                 out.append(tagType);
@@ -574,7 +576,7 @@ public class Html {
                 next++;
             }
 
-            withinParagraph(out, text, i, next - nl);
+            withinParagraph(out, text, i, next - nl, false);
 
             if (nl == 1) {
                 out.append("<br>\n");
@@ -593,7 +595,8 @@ public class Html {
         out.append("</p>\n");
     }
 
-    private static void withinParagraph(StringBuilder out, Spanned text, int start, int end) {
+    private static void withinParagraph(StringBuilder out, Spanned text, int start, int end,
+            boolean useSemanticHeadingTag) {
         int next;
         for (int i = start; i < end; i = next) {
             next = text.nextSpanTransition(i, end, CharacterStyle.class);
@@ -660,7 +663,8 @@ public class Html {
                     // px in CSS is the equivalance of dip in Android
                     out.append(String.format("<span style=\"font-size:%.0fpx\";>", sizeDip));
                 }
-                if (style[j] instanceof RelativeSizeSpan) {
+                if (style[j] instanceof RelativeSizeSpan
+                        && !(style[j] instanceof AreHeadingSpan && useSemanticHeadingTag)) {
                     float sizeEm = ((RelativeSizeSpan) style[j]).getSizeChange();
                     out.append(String.format("<span style=\"font-size:%.2fem;\">", sizeEm));
                 }
@@ -684,7 +688,8 @@ public class Html {
                 if (style[j] instanceof ForegroundColorSpan) {
                     out.append("</span>");
                 }
-                if (style[j] instanceof RelativeSizeSpan) {
+                if (style[j] instanceof RelativeSizeSpan
+                        && !(style[j] instanceof AreHeadingSpan && useSemanticHeadingTag)) {
                     out.append("</span>");
                 }
                 if (style[j] instanceof AbsoluteSizeSpan) {
@@ -764,13 +769,20 @@ public class Html {
             }
         }
     }
+
+    private static String getParagraphTagType(Spanned text, int start, int end) {
+        AreHeadingSpan[] headingSpans = text.getSpans(start, end, AreHeadingSpan.class);
+        for (int i = headingSpans.length - 1; i >= 0; i--) {
+            AreHeadingSpan headingSpan = headingSpans[i];
+            if (text.getSpanStart(headingSpan) <= start && text.getSpanEnd(headingSpan) >= end) {
+                return "h" + headingSpan.getLevel();
+            }
+        }
+        return "p";
+    }
 }
 
 class HtmlToSpannedConverter implements ContentHandler {
-
-    private static final float[] HEADING_SIZES = {
-        1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f,
-    };
 
     private String mSource;
     private XMLReader mReader;
@@ -1204,7 +1216,7 @@ class HtmlToSpannedConverter implements ContentHandler {
         // Their ranges should not include the newlines at the end
         Heading h = getLast(text, Heading.class);
         if (h != null) {
-            setSpanFromMark(text, h, new RelativeSizeSpan(HEADING_SIZES[h.mLevel]),
+            setSpanFromMark(text, h, new AreHeadingSpan(h.mLevel + 1),
                     new StyleSpan(Typeface.BOLD));
         }
 
