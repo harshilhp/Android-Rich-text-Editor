@@ -888,7 +888,7 @@ class HtmlToSpannedConverter implements ContentHandler {
                 }
             }
 
-            if (end == start) {
+            if (start < 0 || end < 0 || end == start) {
                 mSpannableStringBuilder.removeSpan(obj[i]);
             } else {
                 if (obj[i] instanceof AreListSpan) {
@@ -900,7 +900,35 @@ class HtmlToSpannedConverter implements ContentHandler {
                     }
                     mSpannableStringBuilder.setSpan(obj[i], start, end, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
                 } else {
-                    mSpannableStringBuilder.setSpan(obj[i], start, end, Spannable.SPAN_PARAGRAPH);
+                    if (start > 0 && mSpannableStringBuilder.charAt(start - 1) != '\n') {
+                        int previousNewline = start - 1;
+                        while (previousNewline >= 0
+                                && mSpannableStringBuilder.charAt(previousNewline) != '\n') {
+                            previousNewline--;
+                        }
+                        start = previousNewline + 1;
+                    }
+
+                    int len = mSpannableStringBuilder.length();
+                    if (end > 0 && end < len && mSpannableStringBuilder.charAt(end - 1) != '\n') {
+                        int nextNewline = end;
+                        while (nextNewline < len
+                                && mSpannableStringBuilder.charAt(nextNewline) != '\n') {
+                            nextNewline++;
+                        }
+                        if (nextNewline < len) {
+                            end = nextNewline + 1;
+                        } else {
+                            mSpannableStringBuilder.append('\n');
+                            end = mSpannableStringBuilder.length();
+                        }
+                    }
+
+                    if (end <= start) {
+                        mSpannableStringBuilder.removeSpan(obj[i]);
+                    } else {
+                        mSpannableStringBuilder.setSpan(obj[i], start, end, Spannable.SPAN_PARAGRAPH);
+                    }
                 }
             }
         }
